@@ -40,7 +40,6 @@ import axios from 'axios'
     data() {
         return {
             course: {},
-            quizz: []
         }
     }, 
     mounted() {
@@ -54,7 +53,6 @@ import axios from 'axios'
                 console.log(response.data)
 
                 this.course = response.data.course
-                this.quizz = response.data.quizz
             })
     }
 }

@@ -20,38 +20,84 @@
 
                     <div class="column is-10">
                         <!-- Insert button -->
-                        <button @click="showInsertForm">Insert</button>
-
                         <!-- Filter input -->
                         <input type="text" class="input" v-model="filterText" @input="applyFilter" placeholder="Filter">
 
+                        <div class="table-container">
                         <!-- Table -->
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th   
-                                        v-for="(item, i) in headlist" v-bind:key="i"
-                                    > {{item.row}}
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="(quiz, i) in quizzes" v-bind:key="i">
-                                    <td v-for="(header, j) in headlist" v-bind:key="j">
-                                        {{quiz[header.row]}}
-                                    </td>
-                                    
-                                    <td>
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th   
+                                            v-for="(item, i) in headlist" v-bind:key="i"
+                                        > {{item.row}}
+                                        </th>
+                                        <th>Answer 1</th>
+                                        <th>Answer 2</th>
+                                        <th>Answer 3</th>
+                                        <th>Answer 4</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="(quiz, i) in quizzes" v-bind:key="i">
+                                        <td v-for="(header, j) in headlist" v-bind:key="j">
+                                            <span v-if="selected_item === quiz && header.row !== 'qtype'">
+                                                <input v-model="quiz[header.row]" type="text">
+                                            </span>
+                                            <span v-else>
+                                                {{quiz[header.row]}}
+                                            </span>
+                                        </td>
+                                            
+                                        <td><span v-if="selected_item === quiz && quiz.multichoice.answer1">
+                                                <input v-model="quiz.multichoice.answer1" type="text">
+                                            </span>
+                                            <span v-else>
+                                                {{quiz.multichoice.answer1}}
+                                            </span></td>
+                                        
+                                        <td><span v-if="selected_item === quiz && quiz.multichoice.answer2">
+                                                <input v-model="quiz.multichoice.answer2" type="text">
+                                            </span>
+                                            <span v-else>
+                                                {{quiz.multichoice.answer2}}
+                                            </span></td>
+                                        
+                                        <td><span v-if="selected_item === quiz && quiz.multichoice.answer3">
+                                                <input v-model="quiz.multichoice.answer3" type="text">
+                                            </span>
+                                            <span v-else>
+                                                {{quiz.multichoice.answer3}}
+                                            </span></td>
+                                        
+                                        <td><span v-if="selected_item === quiz && quiz.multichoice.answer4">
+                                                <input v-model="quiz.multichoice.answer4" type="text">
+                                            </span>
+                                            <span v-else>
+                                                {{quiz.multichoice.answer4}}
+                                            </span></td>
+                                        <td>
 
-                                    <!-- Edit button -->
-                                        <button @click="editItem(item)">Edit</button>
+                                        <!-- Edit button -->
+                                            <button @click="editItem(quiz)">Edit</button>
 
-                                        <!-- Delete button -->
-                                        <button @click="deleteItem(item)">Delete</button>
+                                            <!-- Delete button -->
+                                            <button @click="deleteItem(quiz)">Delete</button>
+                                            <button class="button is-small is-success" v-if="selected_item === quiz" @click="updateItem(quiz)">Update</button>
+
+                                        </td>
+                                    </tr>
+                                </tbody>
+
+                                <tfoot>
+                                    <td v-for="(value, name) in this.inserted_item">
+                                        <input v-model="this.inserted_item[name]" type="text">
                                     </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                                    <td> <button @click="insertItem()">Insert</button> 
+                                    </td>
+                                </tfoot>
+                            </table>  
+                        </div>  
                     </div>
                 </div>
             </div>
@@ -65,7 +111,27 @@ import axios from 'axios'
     data() {
         return {
             course: {},
-            headlist: [],
+            selected_item: null,
+            inserted_item: {
+                "Chapter": null,
+                "content": null,
+                "level": null,
+                "avgtime": null,
+                "qtype": null,
+                "answer": null,
+                "Answer 1": null,
+                "Answer 2": null,
+                "Answer 3": null,
+                "Answer 4": null,
+            },
+            headlist: [
+                {"row": "Chapter"},
+                {"row": "content"},
+                {"row": "level"},
+                {"row": "avgtime"},
+                {"row": "qtype"},
+                {"row": "answer"},
+            ],
             quizzes: [],
             filterText: '', // Filter input value
         }
@@ -79,7 +145,6 @@ import axios from 'axios'
             .get(`/api/v1/courses/${slug}/get-quizzes`)
             .then(response => {
                 console.log(response.data)
-                this.headlist = response.data.headlist
                 this.course = response.data.course
                 this.quizzes = response.data.quizzes
                 console.log(this.quizzes)
@@ -94,18 +159,61 @@ import axios from 'axios'
     },
   },
   methods: {
-    showInsertForm() {
+    insertItem() {
+    axios
+        .post(`/api/v1/courses/${this.course.slug}/insert-quiz/`, this.inserted_item)
+        .then(response => {
+                    alert("Question has been insrted")
+                    this.$router.go()
+                })
+                .catch(error => {
+                    alert(error.response)  
+                    console.log(error)
+                })
       // Logic to show insert form or navigate to insert view
     },
     applyFilter() {
-      // Logic to apply filter
+        const params = {
+            "content": this.filterText, 
+            };
+        axios
+            .get(`/api/v1/courses/${this.course.slug}/filter-quiz`, {params})
+            .then(response => {
+                console.log(response.data)
+                this.quizzes = response.data
+            })
     },
     editItem(item) {
-      // Logic to edit the item
+        this.selected_item = item
     },
     deleteItem(item) {
-      // Logic to delete the item
-    },
+        if (confirm('Are you sure'))
+            axios 
+                .delete(`/api/v1/courses/${this.course.slug}/delete-quiz/${item.id}/`)
+                .then(response => {
+                    alert("Question " + item.id + " has been deleted")
+                    this.$router.go()
+                })
+                .catch(error => {
+                    alert(response.data)
+                    this.$router.go()
+                })
+            
+    }, 
+    updateItem(item) {
+        this.selected_item = null
+        axios
+            .post(`/api/v1/courses/${this.course.slug}/edit-quizzes/`, item)
+            .then(response => {
+                alert("Question " + item.id + " has been added")
+                this.$router.go()
+            })
+            .catch(error => {
+            console.log(error)
+            alert(error.response)
+
+            })
+    }
   },
 }
 </script>
