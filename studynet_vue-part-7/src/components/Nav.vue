@@ -1,7 +1,7 @@
 <template>
     <nav class="navbar is-info" role="navigation" aria-label="main naviation" style="min-height: 5rem;">
         <div class="navbar-brand">
-            <router-link class="navbar-item is-size-4" to="/">StudyNet</router-link>
+            <router-link class="navbar-item is-size-4" to="/">ExamGen</router-link>
         </div>
 
         <div id="navbar-item" class="navbar-menu">

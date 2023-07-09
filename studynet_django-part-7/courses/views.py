@@ -8,6 +8,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from django.core.exceptions import ValidationError
 import pandas as pd
+from django.contrib.auth.models import Group, User
 
 from .serializers import CourseListSerializer, ChapterListSerializer, TCListSerializer, QuizListSerializer, TCListSerializer, ListViewSerializer
 from .models import Course, Chapter, Quiz, Muliplechoicesanswer, Teachercourse
@@ -21,9 +22,17 @@ from reportlab.lib.styles import getSampleStyleSheet
 import io
 import json
 
+
+def is_allowed_user(user):
+    return user.groups.filter(name='Admin').exists()
+
 @api_view(["GET"])
 def get_courses(request):
-    if request.user.is_authenticated:
+    if is_allowed_user(request.user):
+        courses = Course.objects.all()
+        courses = CourseListSerializer(courses, many=True)
+        data = courses.data
+    elif request.user.is_authenticated:
         tc = Teachercourse.objects.filter(teacher_id=request.user.id).select_related('course_id')
         data = []
         for item in tc:
@@ -38,9 +47,15 @@ def get_courses(request):
 def get_course(request, slug):
     course = Course.objects.get(slug=slug)
     serializer = CourseListSerializer(course)
+    teachers = Teachercourse.objects.filter(course_id=course)
+    chapters = Chapter.objects.filter(course_id=course)
+    teacher_serilaizer = TCListSerializer(teachers, many=True)
+    chapters_serializer = ChapterListSerializer(chapters, many=True)
     if request.user.is_authenticated:
         data = Response({
         'course': serializer.data,
+        'teachers': teacher_serilaizer.data,
+        'chapters': chapters_serializer.data
     })
     else:
         data = Response({})
@@ -198,23 +213,16 @@ def gen_exam(request, slug):
                 lines.append(" ")
     
     response = HttpResponse(content_type='application/pdf')
-
     response['Content-Disposition'] = 'attachment; filename="example.pdf"'
-
     document = SimpleDocTemplate(response, pagesize=letter)
-
     content = []
-
     styles = getSampleStyleSheet()
-
     for line in lines:
         if line == " ":
             content.append(Spacer(1, 12))
         else:
             content.append(Paragraph(line, styles['Normal']))
-
     document.build(content)
-
     return response
 
 
@@ -242,3 +250,93 @@ def upload_csv(request, slug):
         for name, t in zip(qname, new_time):
             Quiz.objects.filter(content=name).update(avgtime=t)
         return Response("Succesful update", status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+def get_user_group(request):
+    user_group = request.user.groups.first().name
+    return Response({'user_group': user_group})
+
+
+@api_view(["GET"])
+def get_user(request):
+    group = Group.objects.get(name='User')
+    users = group.user_set.all()
+    user_data = [{'id': user.id, 'username': user.username} for user in users]
+    return Response(user_data)
+
+
+@api_view(["POST"])
+def create_course(request):
+    if is_allowed_user(request.user):
+        data = request.data
+        chapters = data.pop("chapters")
+        teachers = data.pop("selectedTeachers")
+        data["slug"] = data.pop("acronym")
+        data["short_description"] = data.pop("shortDescription")
+        data["long_description"] = data.pop("longDescription")
+        course = Course.objects.create(**data)
+        for chapter in chapters:
+            chapter_content = chapter.pop("description")
+            chapter["chapter_content"] = chapter_content
+            chapter["course_id"] = course
+            new_chapter = Chapter.objects.create(**chapter)
+        for teacher_id in teachers:
+            print(teacher_id)
+            teacher = User.objects.get(id=teacher_id)
+            print(teacher)
+            new_tc = {}
+            new_tc["teacher_id"] = teacher
+            new_tc["course_id"] = course
+            tc = Teachercourse.objects.create(**new_tc)
+        return Response([])
+
+@api_view(["POST"])
+def delete_course(request):
+    if is_allowed_user(request.user):
+        data = request.data
+        course = Course.objects.get(id=data["id"])
+        course.delete()
+    return Response([])
+
+@api_view(["GET"])
+def get_teachers(request, slug):
+    if is_allowed_user(request.user):
+        group = Group.objects.get(name='User')
+        teachers = User.objects.filter(groups=group)
+        teacher_data = []
+        for teacher in teachers:
+            teacher_data.append({
+                'id': teacher.id,
+                'username': teacher.username,
+            })
+        
+        return Response(teacher_data)
+
+
+@api_view(["POST"])
+def edit_course(request, slug):
+    if is_allowed_user(request.user):
+        data = request.data
+        chapters = data.pop("chapters")
+        teachers = data.pop("teachers")
+        data["slug"] = data.pop("acronym")
+        course = Course.objects.filter(slug=data["slug"]).update(**data)
+        for chapter in chapters:
+            chapter["course_id"] = course
+            new_chapter = Chapter.objects.filter(id=chapter["id"]).update(**chapter)
+        
+        old_teachers = Teachercourse.objects.filter(course_id=course)
+        for j in old_teachers:
+            if j.teacher_id not in teachers:
+                tc = Teachercourse.objects.get(course_id=course, teacher_id=j.teacher_id)
+                tc.delete()
+
+        print(teachers)
+        for teacher_id in teachers:
+            teacher = User.objects.get(id=teacher_id)
+            new_tc = {}
+            new_tc["teacher_id"] = teacher
+            new_tc["course_id"] = Course.objects.get(id=course)
+            tc = Teachercourse.objects.create(**new_tc)
+        return Response([])

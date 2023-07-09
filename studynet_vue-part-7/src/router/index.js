@@ -8,7 +8,8 @@ import Courses from '../views/Courses.vue'
 import Course from '../views/Course.vue'
 import QuestionDatabase from '../views/QuestionDatabase.vue'
 import ExamGen from '../views/ExamGen.vue'
-
+import CreateCourse from '../views/CreateCourse.vue'
+import EditCourse from '../views/EditCourse.vue'
 import MyAccount from '../views/dashboard/MyAccount.vue'
 
 const routes = [
@@ -59,6 +60,16 @@ const routes = [
         name: 'ExamGen',
         component: ExamGen
       },
+    {
+        path: '/courses/create-course',
+        name: 'CreateCourse',
+        component: CreateCourse
+    },
+    {
+        path: '/courses/edit-course/:slug',
+        name: 'EditCourse',
+        component: EditCourse
+    }
 ]
 
 const router = createRouter({

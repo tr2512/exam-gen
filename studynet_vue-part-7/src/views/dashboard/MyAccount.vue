@@ -1,6 +1,6 @@
 <template>
   <div class="about">
-    <div class="hero is-info">
+    <div class="hero is-info has-background-link">
       <div class="hero-body has-text-centered">
         <h1 class="title">My Account</h1>
       </div>
@@ -16,6 +16,19 @@
 import axios from 'axios'
 
 export default {
+    data() {
+        return {
+        userGroup: null
+        }
+    },
+    async mounted () {
+        axios
+            .get('/api/v1/courses/verify/')
+            .then(response => {
+                console.log(response.data.user_group)
+                this.userGroup = response.data.user_group
+            })
+    },
     methods: {
         async logout() {
             console.log('logout')

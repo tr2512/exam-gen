@@ -50,7 +50,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'djoser',
     'courses',
-    'django_extensions'
+    'django_extensions',
 ]
 
 GRAPH_MODELS ={

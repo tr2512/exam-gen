@@ -1,7 +1,7 @@
 <template>
-    <div class="hero is-info">
+    <div class="hero is-info has-background-link">
             <div class="hero-body has-text-centered">
-                <h1 class="title"> Title </h1>
+                <h1 class="title"> Exam generation </h1>
             </div>
         </div>
     <div class="generate-exam-container">
@@ -134,7 +134,7 @@ export default {
         const slug = this.$route.params.slug
         this.slug = slug
         axios
-            .get(`/api/v1/courses/${slug}/get-chapter`)
+            .get(`/api/v1/courses/course/${slug}/get-chapter`)
             .then(response => {
                 this.chapters = response.data
                 console.log(this.chapters)
@@ -148,7 +148,7 @@ export default {
         generateExam() {
             const params = {"content": this.input};
             axios
-                .get(`/api/v1/courses/${this.slug}/gen-exam`, {
+                .get(`/api/v1/courses/course/${this.slug}/gen-exam`, {
                     responseType: 'blob',
                     params
                 })

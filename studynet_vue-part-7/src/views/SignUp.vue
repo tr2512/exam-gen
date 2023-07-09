@@ -1,6 +1,6 @@
 <template>
   <div class="signup">
-    <div class="hero is-info">
+    <div class="hero is-info has-background-link">
       <div class="hero-body has-text-centered">
         <h1 class="title">Sign up</h1>
       </div>

@@ -1,6 +1,6 @@
 <template>
     <div class="QuestionDatabase">
-        <div class="hero is-info">
+        <div class="hero is-info has-background-link">
             <div class="hero-body has-text-centered">
                 <h1 class="title"> {{course.title}} questions database </h1>
             </div>
@@ -145,7 +145,7 @@ import axios from 'axios'
         const slug = this.$route.params.slug
 
         axios
-            .get(`/api/v1/courses/${slug}/get-quizzes`)
+            .get(`/api/v1/courses/course/${slug}/get-quizzes`)
             .then(response => {
                 console.log(response.data)
                 this.course = response.data.course
@@ -168,7 +168,7 @@ import axios from 'axios'
       formData.append('file', file);
 
       axios
-        .post(`/api/v1/courses/${this.course.slug}/upload-csv/`, formData)
+        .post(`/api/v1/courses/course/${this.course.slug}/upload-csv/`, formData)
         .then((response) => {
           alert("Succesful update!")
           this.$router.go()
@@ -181,7 +181,7 @@ import axios from 'axios'
     },
     insertItem() {
     axios
-        .post(`/api/v1/courses/${this.course.slug}/insert-quiz/`, this.inserted_item)
+        .post(`/api/v1/courses/course/${this.course.slug}/insert-quiz/`, this.inserted_item)
         .then(response => {
                     alert("Question has been insrted")
                     this.$router.go()
@@ -197,7 +197,7 @@ import axios from 'axios'
             "content": this.filterText, 
             };
         axios
-            .get(`/api/v1/courses/${this.course.slug}/filter-quiz`, {params})
+            .get(`/api/v1/courses/course/${this.course.slug}/filter-quiz`, {params})
             .then(response => {
                 console.log(response.data)
                 this.quizzes = response.data
@@ -209,7 +209,7 @@ import axios from 'axios'
     deleteItem(item) {
         if (confirm('Are you sure'))
             axios 
-                .delete(`/api/v1/courses/${this.course.slug}/delete-quiz/${item.id}/`)
+                .delete(`/api/v1/courses/course/${this.course.slug}/delete-quiz/${item.id}/`)
                 .then(response => {
                     alert("Question " + item.id + " has been deleted")
                     this.$router.go()
@@ -223,9 +223,9 @@ import axios from 'axios'
     updateItem(item) {
         this.selected_item = null
         axios
-            .post(`/api/v1/courses/${this.course.slug}/edit-quizzes/`, item)
+            .post(`/api/v1/courses/course/${this.course.slug}/edit-quizzes/`, item)
             .then(response => {
-                alert("Question " + item.id + " has been added")
+                alert("Question " + item.id + " has been edited")
                 this.$router.go()
             })
             .catch(error => {

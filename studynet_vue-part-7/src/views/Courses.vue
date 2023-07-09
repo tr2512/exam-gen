@@ -1,27 +1,17 @@
 <template>
     <div class="courses">
-        <div class="hero is-info">
+        <div class="hero is-info has-background-link">
             <div class="hero-body has-text-centered">
                 <h1 class="title"> Courses </h1>
             </div>
         </div>
+         <router-link to="/courses/create-course" v-if="this.userGroup === 'Admin'"><button> Create course</button> </router-link> 
 
         <section class="section">
             <div class="container">
-                <div class="columns">
-                    <div class="column is-2">
-                        <aside class="menu">
-                            <p class="menu-label"> Categories </p>
+                <div class="columns is-multiline">
 
-                            <ul class="new-list">
-                                <li><a> All courses </a></li>
-                                <li><a> Something </a></li>
-                                <li><a> Something </a></li>
-                            </ul>
-                        </aside>
-                    </div>
-
-                    <div class="column is-10"
+                    <div class="column is-4"
                         v-for="course in courses"
                         v-bind:key="course.id"
                     >  
@@ -44,6 +34,10 @@
                                 <p class="size is-5"> {{course.long_description}} </p>
 
                                 <router-link :to="{'name': 'Course', params: {slug: course.slug}}"> More </router-link>
+                                <div class="has-text-danger-dark">
+                                <div class="is-clickable" @click="deleteCourse(course)" v-if="this.userGroup === 'Admin'"> Delete course </div>
+                                <router-link :to="{'name': 'EditCourse', params: {slug: course.slug}}"> Edit course </router-link>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -58,19 +52,40 @@ import axios from 'axios'
    export default {
     data() {
         return {
-            courses: []
+            courses: [],
+            userGroup: null
         }
     }, 
     mounted() {
         console.log('mounted')
 
         axios
-            .get(`/api/v1/courses/`)
+            .get(`/api/v1/courses/course/`)
             .then(response => {
                 console.log(response.data)
 
                 this.courses = response.data
+        })
+
+        axios
+            .get('/api/v1/courses/verify/')
+            .then(response => {
+                console.log(response.data.user_group)
+                this.userGroup = response.data.user_group
             })
-    }
+    }, methods: {
+        deleteCourse(course) {
+            confirm("Are you sure about deleting " + course.title +  " course?")
+            axios
+                .post("/api/v1/courses/delete-course/", course)
+                .then(response => {
+                    alert("The course " + course.title + " has been deleted")
+                    this.$router.go()
+                }) 
+                .catch(error => {
+                    alert("The delete operation faled, please try again.")
+                })
+        } 
+    },
 }
 </script>

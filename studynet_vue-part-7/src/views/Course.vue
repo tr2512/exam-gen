@@ -1,6 +1,6 @@
 <template>
     <div class="course">
-        <div class="hero is-info">
+        <div class="hero is-info has-background-link">
             <div class="hero-body has-text-centered">
                 <h1 class="title"> {{course.title}} </h1>
             </div>
@@ -13,8 +13,8 @@
                         <h2> Table of contents </h2>
 
                         <ul> 
-                            <router-link v-bind:to="'/courses/' + course.slug + '/question-database'"> Questions database </router-link>
-                            <router-link v-bind:to="'/courses/' + course.slug + '/exam-gen'"> Exam generation </router-link>
+                            <li><router-link v-bind:to="'/courses/' + course.slug + '/question-database'"> Questions database </router-link></li>
+                            <li><router-link v-bind:to="'/courses/' + course.slug + '/exam-gen'"> Exam generation </router-link></li>
                         </ul>
                     </div>
 
@@ -48,7 +48,7 @@ import axios from 'axios'
         const slug = this.$route.params.slug
 
         axios
-            .get(`/api/v1/courses/${slug}/`)
+            .get(`/api/v1/courses/course/${slug}/`)
             .then(response => {
                 console.log(response.data)
 
