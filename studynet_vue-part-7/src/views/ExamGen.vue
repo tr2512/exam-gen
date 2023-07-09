@@ -8,8 +8,8 @@
     <div class="generate-exam-container03">
        <div class="column is-3">
         <ul> 
-            <li><router-link v-bind:to="'/courses/'  + '/question-database'"> Questions database </router-link></li>
-            <li><router-link v-bind:to="'/courses/'  + '/exam-gen'"> Exam generation </router-link></li>
+            <li><router-link v-bind:to="'/courses/' +  this.slug + '/question-database'"> Questions database </router-link></li>
+            <li><router-link v-bind:to="'/courses/' + this.slug + '/exam-gen'"> Exam generation </router-link></li>
         </ul>
         </div>
       <div class="generate-exam-container06">
@@ -113,12 +113,13 @@ import axios from 'axios'
 export default {
     data() {
         return {
+            slug: null,
             chapters: [],
             input: {
                 "qtype": {
-                    "multichoices": 0,
-                    "tf": 0,
-                    "paragraph": 0,
+                    "multichoices": null,
+                    "tf": null,
+                    "paragraph": null,
                 },
                 "chapters": {},
                 "min_duration": 0,
@@ -131,9 +132,9 @@ export default {
         console.log('mounted')
 
         const slug = this.$route.params.slug
-
+        this.slug = slug
         axios
-            .get(`/api/v1/courses/${slug}/get-chapter`  )
+            .get(`/api/v1/courses/${slug}/get-chapter`)
             .then(response => {
                 this.chapters = response.data
                 console.log(this.chapters)
@@ -147,7 +148,7 @@ export default {
         generateExam() {
             const params = {"content": this.input};
             axios
-                .get(`/api/v1/courses/${this.$route.params.slug}/gen-exam`, {
+                .get(`/api/v1/courses/${this.slug}/gen-exam`, {
                     responseType: 'blob',
                     params
                 })

@@ -1,5 +1,4 @@
 from django.urls import path
-
 from courses import views
 
 urlpatterns = [
@@ -11,5 +10,6 @@ urlpatterns = [
     path('<slug:slug>/filter-quiz/', views.filter_quiz),
     path('<slug:slug>/insert-quiz/', views.insert_quiz),
     path('<slug:slug>/get-chapter/', views.get_chapter),
-    path('<slug:slug>/gen-exam/', views.gen_exam)
+    path('<slug:slug>/gen-exam/', views.gen_exam), 
+    path('<slug:slug>/upload-csv/', views.upload_csv)
 ]

@@ -13,14 +13,16 @@
                         <h2> Table of contents </h2>
 
                         <ul> 
-                            <router-link v-bind:to="'/courses/' + course.slug + '/question-database'"> Questions database </router-link>
-                            <router-link v-bind:to="'/courses/' + course.slug + '/exam-gen'"> Exam generation </router-link>
+                            <li><router-link v-bind:to="'/courses/' + course.slug + '/question-database'"> Questions database </router-link></li>
+                            <li><router-link v-bind:to="'/courses/' + course.slug + '/exam-gen'"> Exam generation </router-link></li>
                         </ul>
                     </div>
 
                     <div class="column is-10">
-                        <!-- Insert button -->
-                        <!-- Filter input -->
+                        <div>
+                            <input type="file" ref="fileInput" accept=".csv" />
+                            <button @click="uploadFile">Upload CSV file for test time duration</button>
+                        </div>
                         <input type="text" class="input" v-model="filterText" @input="applyFilter" placeholder="Filter">
 
                         <div class="table-container">
@@ -106,6 +108,7 @@
 </template>
 
 <script>
+import Upload from '@/components/Upload'
 import axios from 'axios'
    export default {
     data() {
@@ -159,6 +162,23 @@ import axios from 'axios'
     },
   },
   methods: {
+    uploadFile() {
+      const file = this.$refs.fileInput.files[0];
+      const formData = new FormData();
+      formData.append('file', file);
+
+      axios
+        .post(`/api/v1/courses/${this.course.slug}/upload-csv/`, formData)
+        .then((response) => {
+          alert("Succesful update!")
+          this.$router.go()
+          console.log(response);
+        })
+        .catch((error) => {
+          // Handle any errors
+          console.error(error);
+        });
+    },
     insertItem() {
     axios
         .post(`/api/v1/courses/${this.course.slug}/insert-quiz/`, this.inserted_item)

@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view
 from django.core.exceptions import ValidationError
+import pandas as pd
 
 from .serializers import CourseListSerializer, ChapterListSerializer, TCListSerializer, QuizListSerializer, TCListSerializer, ListViewSerializer
 from .models import Course, Chapter, Quiz, Muliplechoicesanswer, Teachercourse
@@ -214,3 +215,29 @@ def gen_exam(request, slug):
     document.build(content)
 
     return response
+
+
+@api_view(["POST"])
+def upload_csv(request, slug):
+    if request.user.is_authenticated:
+        csv_file = request.FILES.get('file')
+        df = pd.read_csv(csv_file)
+        df1 = df.groupby(["Question_name"], as_index=False).mean()
+        print(df1.keys())
+        qname = []
+        true_time = []
+        avg_score = []
+        t_db = 0
+        for index, row in df1.iterrows():
+            name = row["Question_name"]
+            qname.append(name)
+            q = Quiz.objects.filter(content=name).first()
+            true_time.append(q.avgtime)
+            t = row["Time"]
+            t_db += q.avgtime
+            avg_score.append(row["Score"])
+        relative_time = [time * t / t_db for time in true_time]
+        new_time = [0.9 * t_true + 0.1 * t_relative / ascore for t_true, t_relative, ascore in zip(true_time, relative_time, avg_score)]
+        for name, t in zip(qname, new_time):
+            Quiz.objects.filter(content=name).update(avgtime=t)
+        return Response("Succesful update", status=status.HTTP_200_OK)
