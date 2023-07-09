@@ -14,7 +14,7 @@
 
                         <ul> 
                             <router-link v-bind:to="'/courses/' + course.slug + '/question-database'"> Questions database </router-link>
-                            <li href="#"> Generate exam </li>
+                            <router-link v-bind:to="'/courses/' + course.slug + '/exam-gen'"> Exam generation </router-link>
                         </ul>
                     </div>
 

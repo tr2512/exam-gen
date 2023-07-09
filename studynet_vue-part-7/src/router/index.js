@@ -7,6 +7,7 @@ import LogIn from '../views/LogIn.vue'
 import Courses from '../views/Courses.vue'
 import Course from '../views/Course.vue'
 import QuestionDatabase from '../views/QuestionDatabase.vue'
+import ExamGen from '../views/ExamGen.vue'
 
 import MyAccount from '../views/dashboard/MyAccount.vue'
 
@@ -51,6 +52,12 @@ const routes = [
         path: '/courses/:slug/question-database',
         name: 'QuestionDatabase',
         component: QuestionDatabase
+      },
+
+      {
+        path: '/courses/:slug/exam-gen',
+        name: 'ExamGen',
+        component: ExamGen
       },
 ]
 

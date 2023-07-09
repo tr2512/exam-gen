@@ -1,6 +1,8 @@
 from django.shortcuts import render
 
 # Create your views here.
+from django.http import FileResponse, HttpResponse
+
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -9,6 +11,13 @@ from django.core.exceptions import ValidationError
 from .serializers import CourseListSerializer, ChapterListSerializer, TCListSerializer, QuizListSerializer, TCListSerializer, ListViewSerializer
 from .models import Course, Chapter, Quiz, Muliplechoicesanswer, Teachercourse
 from .filters import QuizFilter
+from .utils import generate_questions
+import random
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+import io
+import json
 
 @api_view(["GET"])
 def get_courses(request):
@@ -126,3 +135,82 @@ def insert_quiz(request, slug):
             return Response("Wrong data input type", status=status.HTTP_404_NOT_FOUND)
         except ValueError:
             return Response("Wrong data input type", status=status.HTTP_404_NOT_FOUND)
+
+@api_view(["GET"])
+def get_chapter(request, slug):
+    if request.user.is_authenticated:
+        course = Course.objects.get(slug=slug)
+        chapters = Chapter.objects.filter(course_id=course)
+        chapters_se = ChapterListSerializer(chapters, many=True)
+        data = chapters_se.data
+    else:
+        data = []
+    return Response(data)
+
+@api_view(["GET"])
+def gen_exam(request, slug):
+    course = Course.objects.get(slug=slug)
+    print(type(request.GET.get("content")))
+    data = eval(request.GET.get("content").replace('true', "True").replace("false", "False"))
+    diff = float(data["avg_diff"])
+    print(diff)
+    duration = 0
+    index = 0
+    while not (duration > float(data["min_duration"]) and duration < float(data["max_duration"])):
+        duration = 0
+        index += 1
+        quizzes = Quiz.objects.select_related().prefetch_related().filter(chapter_id__course_id__id=course.id)
+        d = {i: {j: None for j in data["chapters"].keys() if data["chapters"][j]} for i in data["qtype"] if int(data["qtype"][i]) > 0}
+        d_final = {i:[] for i in data["qtype"] if int(data["qtype"][i]) > 0}
+        for keyi in d.keys():
+            for keyj in d[keyi].keys():
+                print(keyi, keyj)
+                quiz = Quiz.objects.filter(chapter_id=keyj, level__gt=diff - 2.5, level__lt=diff + 2.5, qtype=keyi).values()
+                print(list(quiz))
+                d[keyi][keyj] = random.sample(list(quiz), int(data["qtype"][keyi]))
+                d_final[keyi] += d[keyi][keyj]
+            d_final[keyi] = random.sample(d_final[keyi], int(data["qtype"][keyi]))
+            for i in d_final[keyi]:
+                duration += i['avgtime']
+        if index == 5:
+            return Response("FAIL", status=status.HTTP_404_NOT_FOUND)
+    
+
+    lines = []
+    i = 0
+    print(d_final)
+    for key, value in d_final.items():
+        for q in value:
+            i += 1
+            qcontent = q["content"]
+            question = f"Question {i}: {qcontent} <br/>"
+            lines.append(question)
+            lines.append(" ")
+            if key == "multichoices":
+                print(int(q["id"]))
+                answer = Muliplechoicesanswer.objects.get(question_id=int(q["id"]))
+                lines.append(f"A. {answer.answer1}")
+                lines.append(f"B. {answer.answer2}")
+                lines.append(f"C. {answer.answer3}")
+                lines.append(f"D. {answer.answer4}")
+                lines.append(" ")
+    
+    response = HttpResponse(content_type='application/pdf')
+
+    response['Content-Disposition'] = 'attachment; filename="example.pdf"'
+
+    document = SimpleDocTemplate(response, pagesize=letter)
+
+    content = []
+
+    styles = getSampleStyleSheet()
+
+    for line in lines:
+        if line == " ":
+            content.append(Spacer(1, 12))
+        else:
+            content.append(Paragraph(line, styles['Normal']))
+
+    document.build(content)
+
+    return response

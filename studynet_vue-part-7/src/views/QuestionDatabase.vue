@@ -13,8 +13,8 @@
                         <h2> Table of contents </h2>
 
                         <ul> 
-                            <li href="#"> Questions database </li>
-                            <li href="#"> Generate exam </li>
+                            <router-link v-bind:to="'/courses/' + course.slug + '/question-database'"> Questions database </router-link>
+                            <router-link v-bind:to="'/courses/' + course.slug + '/exam-gen'"> Exam generation </router-link>
                         </ul>
                     </div>
 
