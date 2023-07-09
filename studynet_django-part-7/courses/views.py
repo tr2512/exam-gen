@@ -14,6 +14,7 @@ from .models import Course, Chapter, Quiz, Muliplechoicesanswer, Teachercourse
 from .filters import QuizFilter
 from .utils import generate_questions
 import random
+from django.contrib.auth.decorators import login_required, user_passes_test
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
